@@ -12,11 +12,12 @@ binmode STDIN, ':utf8';
 binmode STDOUT,':utf8';
 binmode STDERR,':utf8';
 
-$usage="$0 -w \"STRING\" -a STRING -o FILE -l LANGS
+$usage="$0 -w \"STRING\" -a STRING -o FILE -l LANGS -k FILE
    -w STRING : comma-separated list of words to track (Ex \"eruption,earthquake,tsunami\")
    -a STRING : twitter app used {0,1,2} meaning {crawl1,crawl2,crawl3}
    -o STRING : file name
    -l LANGS  : comma-separated list of languages
+   -k FILE   : key file
 
 Example:
    $0 -w \"eruption,earthquake,tsunami\" -a crawl1 -o ./track.naturaldisaster -l en &
@@ -30,13 +31,14 @@ while ($#ARGV>=0){
     if ($tok eq "-a" && $#ARGV>=0) {$app=shift @ARGV; next;}
     if ($tok eq "-o" && $#ARGV>=0) {$fout=shift @ARGV; next;}
     if ($tok eq "-l" && $#ARGV>=0) {$language=shift @ARGV; next;}
+    if ($tok eq "-l" && $#ARGV>=0) {$fkey=shift @ARGV; next;}
     die "error: unparsed '$tok' option\n$usage";
 }
-die "error: missing options\n$usage" unless (defined $track && defined $app && defined $fout && defined $language);
+die "error: missing options\n$usage" unless (defined $track && defined $app && defined $fout && defined $language && defined $fkey);
 $track=&escape($language,decode("utf-8",$track));
+my ($consumer_key,$consumer_secret,$token,$token_secret) = &application($fkey);
 
-my ($consumer_key,$consumer_secret,$token,$token_secret) = &application($app);
-$fout .= "___".$language."___app".$app."___".&time;
+$fout .= "___".$language."___".&time;
 $fout =~ s/ /\_/g;
 
 open(FOUT,">$fout.tweets") or die "error: cannot open fout: $fout.tweets\n";
@@ -44,7 +46,7 @@ binmode FOUT, ':utf8';
 open(FLOG,">$fout.log") or die "error: cannot open flog: $fout.log\n";
 binmode FLOG, ':utf8';
 
-print FLOG "app\t$app\n";
+print FLOG "keys\n\t$consumer_key\n\t$consumer_secret\n\t$token\n\t$token_secret\n";
 print FLOG "track\t$track\n";
 print FLOG "lang\t$language\n";
 print FLOG "fout\t$fout.tweets\n";
@@ -86,17 +88,12 @@ close FLOG;
 exit;
 
 sub application{
-    my $app = shift @_;
-    open (FILE,"<./keys") or die "error: cannot open keys file\n";
+    my $fkey = shift @_;
+    open (FILE,"<$fkey") or die "error: cannot open keys file: $fkey\n";
     @keys = <FILE>;
     chomp @keys;
     close FILE;
-    if ($app >=0 && $app <= $#keys){
-	return split /\t/,$keys[$app];
-    }
-    else{
-        die "unparsed -a option\n$usage";
-    }
+    return @keys;
 }
 
 sub escape{
