@@ -14,7 +14,7 @@ binmode STDERR,':utf8';
 
 $usage="$0 -w \"STRING\" -a STRING -o FILE -l LANGS
    -w STRING : comma-separated list of words to track (Ex \"eruption,earthquake,tsunami\")
-   -a STRING : app used {crawl1,crawl2,crawl3}
+   -a STRING : twitter app used {0,1,2} meaning {crawl1,crawl2,crawl3}
    -o STRING : file name
    -l LANGS  : comma-separated list of languages
 
@@ -36,7 +36,7 @@ die "error: missing options\n$usage" unless (defined $track && defined $app && d
 $track=&escape($language,decode("utf-8",$track));
 
 my ($consumer_key,$consumer_secret,$token,$token_secret) = &application($app);
-$fout .= "___".$language."___".$app."___".&time;
+$fout .= "___".$language."___app".$app."___".&time;
 $fout =~ s/ /\_/g;
 
 open(FOUT,">$fout.tweets") or die "error: cannot open fout: $fout.tweets\n";
@@ -44,7 +44,7 @@ binmode FOUT, ':utf8';
 open(FLOG,">$fout.log") or die "error: cannot open flog: $fout.log\n";
 binmode FLOG, ':utf8';
 
-print FLOG "app\t$app\n\t$consumer_key\n\t$consumer_secret\n\t$token\n\t$token_secret\n";
+print FLOG "app\t$app\n";
 print FLOG "track\t$track\n";
 print FLOG "lang\t$language\n";
 print FLOG "fout\t$fout.tweets\n";
@@ -91,15 +91,8 @@ sub application{
     @keys = <FILE>;
     chomp @keys;
     close FILE;
-
-    if ($app eq "crawl1"){
-	return split /\t/,$keys[0];
-    }
-    elsif ($app eq "crawl2"){
-	return split /\t/,$keys[1];
-    }
-    elsif ($app eq "crawl3"){
-	return split /\t/,$keys[2];
+    if ($app >=0 && $app <= $#keys){
+	return split /\t/,$keys[$app];
     }
     else{
         die "unparsed -a option\n$usage";
