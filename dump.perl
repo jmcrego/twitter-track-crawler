@@ -135,7 +135,7 @@ sub symbols{
 sub messg{
     my $str = $t->{text};
     $str =~ s/\t/${TAB}/g;
-$str =~ s/\n/${RET}/g;
-$str =~ s/\r/${RET}/g;
-return $SEP."T:".$str;
+    $str =~ s/\n/${RET}/g;
+    $str =~ s/\r/${RET}/g;
+    return $SEP."T:".$str;
 }
