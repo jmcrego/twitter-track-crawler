@@ -87,44 +87,23 @@ exit;
 
 sub application{
     my $app = shift @_;
-    $consumer_key1    = 'KnzpHso9d7qXfXT72Y0sly360';
-    $consumer_secret1 = 'mQbryk7RInrRp3QZuSkqH4U59H4NsWQj4X8pWFspajklbirCFS';
-    $token1           = '3288314879-pysLtV3l1CnMo3hvRWaGf1KggPQP2xr4SqqcsFy';
-    $token_secret1    = 'jSGfcnlJAGxZLfbx7CbjGFSDPHP4i7u0NA0UqsU8f60qO';
+    open (FILE,"<./keys") or die "error: cannot open keys file\n";
+    @keys = <FILE>;
+    chomp @keys;
+    close FILE;
 
-    $consumer_key2    = 'zLQRN4RKE3xBJCDpErbgWWVUO';
-    $consumer_secret2 = 'M9ezYeQEm5WP84kXycbNA7Zo74lG8DS4gj86THKOzacT1yTBqC';
-    $token2           = '3288314879-dgIk2nZV9yULyllrG9KeFkonoJNdrNZBbkh62VC';
-    $token_secret2    = 'HYiIJYnxvPoaZsW9awDKOSKiNcuE2ofyMteSEQwCbVmBQ';
-
-    $consumer_key3    = 'GvttngR56jlsfhMUWJUVvETA4';
-    $consumer_secret3 = 'hGssqX4gKZoeRHLMjWJoF1yxBiztim6maP9LwW8HywlPTUbZLy';
-    $token3           = '3288314879-LSv3c8BA1lW4lkYMr2zDHQ2Hj1Etmh9dlV42rSM';
-    $token_secret3    = '565L2zzP8nPeDgO9webK6VsvoYn0T5BK6bTrcUBgGoXOU';
-
-    my @result;
     if ($app eq "crawl1"){
-        push @result, $consumer_key1;
-        push @result, $consumer_secret1;
-        push @result, $token1;
-        push @result, $token_secret1;
+	return split /\t/,$keys[0];
     }
     elsif ($app eq "crawl2"){
-        push @result, $consumer_key2;
-        push @result, $consumer_secret2;
-        push @result, $token2;
-        push @result, $token_secret2;
+	return split /\t/,$keys[1];
     }
     elsif ($app eq "crawl3"){
-        push @result, $consumer_key3;
-        push @result, $consumer_secret3;
-        push @result, $token3;
-        push @result, $token_secret3;
+	return split /\t/,$keys[2];
     }
     else{
         die "unparsed -a option\n$usage";
     }
-    return @result;
 }
 
 sub escape{
