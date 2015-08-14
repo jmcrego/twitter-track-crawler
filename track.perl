@@ -97,7 +97,7 @@ sub application{
 sub escape{
     $lng = shift;
     $str = shift;
-#    return $str if ($lng eq "ar");
+    return $str if ($lng eq "ar");
     $out = "";
     while ($str =~/(.)/g){
         if (ord($1)>=128) {$out .= "\\$1";}
