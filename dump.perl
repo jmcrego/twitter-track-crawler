@@ -94,7 +94,7 @@ sub urls{
 #    if ($#res>=0) {return $SEP.join($SEP,@res);}
 #    return "";
 
-    foreach my $str (@{$t->{entities}{urls}}) {push @res, "&".$t->{entities}{urls}."[".join(",",@{$str->{indices}}).")";}
+    foreach my $str (@{$t->{entities}{urls}}) {push @res, "&".$str."[".join(",",@{$str->{indices}}).")";}
 #    foreach my $str (@{$t->{entities}{urls}}) {push @res, "&".$str->{expanded_url}."[".join(",",@{$str->{indices}}).")";}
     if ($#res>=0) {return $SEP.join($SEP,@res);}
     return "";
