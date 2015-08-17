@@ -88,7 +88,6 @@ sub hashtags{
 sub urls{
     my @res=();
     foreach my $str (@{$t->{entities}{urls}}) {push @res, $str->{url}."[".join(",",@{$str->{indices}}).")";}
-#    foreach my $str (@{$t->{entities}{urls}}) {push @res, $str->{expanded_url}."[".join(",",@{$str->{indices}}).")";}
     if ($#res>=0) {return $SEP.join($SEP,@res);}
     return "";
 }
@@ -107,7 +106,7 @@ sub media{
             else {$url=$str->{media_url_https}};
         }
         else {$url=$str->{media_url_https}};
-        push @res, $str->{type}.$url."[".$indices.")";
+        push @res, $str->{type}.$url."[".$indices.")kkkkk";
     }
     if ($#res>=0) {return $SEP.join($SEP,@res);}
     return "";
