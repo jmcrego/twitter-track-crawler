@@ -11,7 +11,7 @@ while (<>){
 	    $type=$1;
 	    $name=$2;
 	    print "\t\tent[$i] type=$type name=$name ==> $ent\n";
-	    $messg =~ s/\Q${type}${name}\E/${type}${i}${type}/;
+	    $messg =~ s/\Q${name}\E/${type}${i}${type}/;
 	}
     }
     print "\tmessg2=$messg\n";
