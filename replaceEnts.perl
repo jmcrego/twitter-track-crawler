@@ -10,7 +10,7 @@ while (<>){
 	if ($ent =~ /^(.+)\[\d+,\d+\)$/){
 	    $name=$1;
 	    print "\t\tent[$i] name=$name ==> $ent\n";
-	    $messg =~ s/\Q$${name}\E/___${i}___/;
+	    $messg =~ s/\Q${name}\E/___${i}___/;
 	}
     }
     print "\tmessg2=$messg\n";
