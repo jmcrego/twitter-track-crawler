@@ -87,7 +87,14 @@ sub hashtags{
 }
 sub urls{
     my @res=();
+    ### regular urls
     foreach my $str (@{$t->{entities}{urls}}) {push @res, $str->{url}."[".join(",",@{$str->{indices}}).")";}
+
+    #### media urls
+    foreach my $str (@{$t->{extended_entities}{media}}) {
+	foreach my $str2 (@{$str->{urls}}) {push @res, $str2->{url}."[".join(",",@{$str2->{indices}}).")";}
+    }
+
     if ($#res>=0) {return $SEP.join($SEP,@res);}
     return "";
 }
