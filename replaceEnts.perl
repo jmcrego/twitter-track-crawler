@@ -12,7 +12,7 @@ while (<>){
 	    $from=$2;
 	    $to=$3;
 	    $size=$to-$from;
-	    $letters = join("",("_") x $size);
+	    $letters = join("",("❁") x $size);
 #	    print "\t\treplacing '$name'\n";
 	    $messg =~ s/${name}/${letters}/i;
 	}
