@@ -11,7 +11,8 @@ while (<>){
 	    $type=$1;
 	    $name=$2;
 	    print "\t\tent[$i] type=$type name=$name ==> $ent\n";
-	    $messg =~ s/\Q${name}\E/${type}${i}${type}/;
+	    if ($type eq "&") {$messg =~ s/\Q${name}\E/${type}${i}${type}/;}
+	    else {$messg =~ s/\Q${type}${name}\E/${type}${i}${type}/;}
 	}
     }
     print "\tmessg2=$messg\n";
