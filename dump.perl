@@ -22,15 +22,35 @@ while (1){
     $id=$t->{id};
     next if ($tweet_ids{$id});
     $tweet_ids{$id}=1;
-    print decode_entities($id.&time.&user.&lang.&favorites.&retweets.&retweet_of.&geolocation.&messg.&hashtags.&urls.&mentions.&symbols."\n");
+    @entities=&findEntities;
+    print decode_entities($id.&time.&user.&lang.&favorites.&retweets.&retweet_of.&geolocation.&messg.$SEP.join($SEP,@entities)."\n");
     if ($t->{retweeted_status}){
         $t = $t->{retweeted_status};
         $id=$t->{id};
         next if ($tweet_ids{$id});
         $tweet_ids{$id}=1;
-        print decode_entities($id.&time.&user.&lang.&favorites.&retweets.&retweet_of.&geolocation.&messg.&hashtags.&urls.&mentions.&symbols."\n");
+	@entities=&findEntities;
+        print decode_entities($id.&time.&user.&lang.&favorites.&retweets.&retweet_of.&geolocation.&messg.$SEP.join($SEP,@entities)."\n");
     }
 }
+sub findEntities{
+    @entities=();
+    $N=65;
+    foreach $entity (&hashtags){push @entities, "_".chr(${N})."_=".$entity;$N++;}
+    foreach $entity (&mentions){push @entities, "_".chr(${N})."_=".$entity;$N++;}
+    foreach $entity (&urls)    {push @entities, "_".chr(${N})."_=".$entity;$N++;}
+    foreach $entity (&symbols) {push @entities, "_".chr(${N})."_=".$entity;$N++;}
+
+#    foreach $entity (&hashtags){push @entities, &rndTag(10, 'A'..'Z')."=".$entity;}
+#    foreach $entity (&mentions){push @entities, &rndTag(10, 'A'..'Z')."=".$entity;}
+#    foreach $entity (&urls)    {push @entities, &rndTag(10, 'A'..'Z')."=".$entity;}
+#    foreach $entity (&symbols) {push @entities, &rndTag(10, 'A'..'Z')."=".$entity;}
+    return @entities;
+}
+
+sub rndTag{ 
+    join '', @_[ map{ rand @_ } 1 .. shift ] ;
+}	
 sub readblock{
     my $lines;
     while(<>){
@@ -39,10 +59,8 @@ sub readblock{
     }
     exit; ### end of file
 }
-
 sub time{
     my $tp = localtime Time::Piece->strptime( $t->{created_at}, "%a %b %d %T %z %Y")->epoch;
-#    return $SEP.$tp->epoch.$SEP."t:".$tp->datetime;
     return $SEP."t:".$tp->datetime;
 }
 sub user{
@@ -79,15 +97,28 @@ sub retweet_of{
     return $SEP."r:"."-1" unless (defined $t->{retweeted_status});
     return $SEP."r:".$t->{retweeted_status}{id};
 }
+sub messg{
+    my $str = $t->{text};
+    $str =~ s/\t/${TAB}/g;
+    $str =~ s/\n/${RET}/g;
+    $str =~ s/\r/${RET}/g;
+    return $SEP.$str;
+}
+
+
+
+
 sub hashtags{
     my @res=();
     foreach my $str (@{$t->{entities}{hashtags}}) {push @res, "#".$str->{text}."[".join(",",@{$str->{indices}}).")";}
+    return @res;
     if ($#res>=0) {return $SEP.join($SEP,@res);}
     return "";
 }
 sub mentions{
     my @res=();
-    foreach my $str (@{$t->{entities}{user_mentions}}) {push @res, "@".$str->{screen_name}."[".join(",",@{$str->{indices}}).")".":".$str->{id};}
+    foreach my $str (@{$t->{entities}{user_mentions}}) {push @res, "@".$str->{screen_name}."[".join(",",@{$str->{indices}}).")";}
+    return @res;
     if ($#res>=0) {return $SEP.join($SEP,@res);}
     return "";
 }
@@ -95,23 +126,16 @@ sub urls{
     my @res=();
     ### regular urls
     foreach my $str (@{$t->{entities}{urls}}) {push @res, $str->{url}."[".join(",",@{$str->{indices}}).")";}
-
     #### media urls
     foreach my $str (@{$t->{entities}{media}}) {push @res, $str->{url}."[".join(",",@{$str->{indices}}).")";}
-
+    return @res;
     if ($#res>=0) {return $SEP.join($SEP,@res);}
     return "";
 }
 sub symbols{
     my @res=();
     foreach my $str (@{$t->{entities}{symbols}}) {push @res, $str->{text}."[".join(",",@{$str->{indices}}).")";}
+    return @res;
     if ($#res>=0) {return $SEP.join($SEP,@res);}
     return "";
-}
-sub messg{
-    my $str = $t->{text};
-    $str =~ s/\t/${TAB}/g;
-    $str =~ s/\n/${RET}/g;
-    $str =~ s/\r/${RET}/g;
-    return $SEP.$str;
 }
