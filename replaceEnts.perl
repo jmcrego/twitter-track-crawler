@@ -10,7 +10,7 @@ while (<>){
 	if ($ent =~ /^(.)(.+)\[\d+,\d+\)$/){
 	    $type=$1;
 	    $name=$2;
-	    print "\t\tent[$i]=$ent ==> type=$type name=$name\n";
+	    print "\t\tent[$i] type=$type name=$name ==> $ent\n";
 	    $messg =~ s/\Q${type}${name}\E/${type}${i}${type}/;
 	}
     }
