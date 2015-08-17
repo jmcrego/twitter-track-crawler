@@ -11,6 +11,14 @@ use utf8;
 binmode STDOUT,':utf8';
 binmode STDERR,':utf8';
 
+while ($#ARGV>=0){
+    $tok = shift @ARGV;
+    if ($tok eq "-replace_urls") {$replaceurls=1; next;}
+    if ($tok eq "-replace_htags") {$replacehtags=1; next;}
+    if ($tok eq "-replace_ment") {$replacement=1; next;}
+    if ($tok eq "-replace_media") {$replacemedia=1; next;}
+}
+
 our $SEP="\t";
 our $RET="✪"; # &#10030; &#x272e;
 our $TAB="❂"; # &#10050; &#x2742;
@@ -22,13 +30,16 @@ while (1){
     $id=$t->{id};
     next if ($tweet_ids{$id});
     $tweet_ids{$id}=1;
-    print decode_entities($id.&time.&user.&lang.&favorites.&retweets.&retweet_of.&messg.&geolocation.&hashtags.&urls.&media.&mentions.&symbols."\n");
+    if ($replaceurls){
+	
+    }
+    print decode_entities($id.&time.&user.&lang.&favorites.&retweets.&retweet_of.&geolocation.&messg.&hashtags.&urls.&media.&mentions.&symbols."\n");
     if ($t->{retweeted_status}){
         $t = $t->{retweeted_status};
         $id=$t->{id};
         next if ($tweet_ids{$id});
         $tweet_ids{$id}=1;
-        print decode_entities($id.&time.&user.&lang.&favorites.&retweets.&retweet_of.&messg.&geolocation.&hashtags.&urls.&media.&mentions.&symbols."\n");
+        print decode_entities($id.&time.&user.&lang.&favorites.&retweets.&retweet_of.&geolocation.&messg.&hashtags.&urls.&media.&mentions.&symbols."\n");
     }
 }
 sub readblock{
@@ -56,15 +67,16 @@ sub filter_level{
     return "";
 }
 sub geolocation{
+    my $location="-";
     if ($t->{place}{country}){
         my $country_code=$t->{place}{country_code};
         #my $country=$t->{place}{country};
         my $full_name=$t->{place}{full_name};
         #my $name=$t->{place}{name};
         #my $url=$t->{place}{url}
-        return $SEP."G:".${full_name}."|".${country_code};
-    
+	$location=${full_name}."|".${country_code};
     }
+    return $SEP."G:".$location;    
 }
 sub retweets{
     return "" unless (defined $t->{retweet_count});
@@ -137,5 +149,5 @@ sub messg{
     $str =~ s/\t/${TAB}/g;
     $str =~ s/\n/${RET}/g;
     $str =~ s/\r/${RET}/g;
-    return $SEP."T:".$str;
+    return $SEP.$str;
 }
