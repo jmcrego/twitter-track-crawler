@@ -8,9 +8,10 @@ while (<>){
     for ($i=9; $i<=$#toks; $i++){
 	print "\t\tent=$ent\n";
 	$ent=$toks[$i];
-	if ($ent =~ /^(.).+\[\d+,\d+\)$/){
+	if ($ent =~ /^(.)(.+)\[\d+,\d+\)$/){
 	    $type=$1;
-	    $messg =~ s/\Q${ent}\E/${type}${i}/;
+	    $name=$2;
+	    $messg =~ s/\Q${type}${name}\E/${type}${i}/;
 	}
     }
     print "\tmessg2=$messg\n";
