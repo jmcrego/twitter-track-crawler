@@ -11,14 +11,6 @@ use utf8;
 binmode STDOUT,':utf8';
 binmode STDERR,':utf8';
 
-#while ($#ARGV>=0){
-#    $tok = shift @ARGV;
-#    if ($tok eq "-replace_urls") {$replaceurls=1; next;}
-#    if ($tok eq "-replace_htags") {$replacehtags=1; next;}
-#    if ($tok eq "-replace_ment") {$replacement=1; next;}
-#    if ($tok eq "-replace_media") {$replacemedia=1; next;}
-#}
-
 our $SEP="\t";
 our $RET="✪"; # &#10030; &#x272e;
 our $TAB="❂"; # &#10050; &#x2742;
@@ -30,9 +22,6 @@ while (1){
     $id=$t->{id};
     next if ($tweet_ids{$id});
     $tweet_ids{$id}=1;
-    if ($replaceurls){
-	
-    }
     print decode_entities($id.&time.&user.&lang.&favorites.&retweets.&retweet_of.&geolocation.&messg.&hashtags.&urls.&media.&mentions.&symbols."\n");
     if ($t->{retweeted_status}){
         $t = $t->{retweeted_status};
@@ -104,7 +93,9 @@ sub urls{
 #    foreach my $str (@{$t->{entities}{urls}}) {push @res, "U:"."[".join(",",@{$str->{indices}}).")".$str->{expanded_url};}
 #    if ($#res>=0) {return $SEP.join($SEP,@res);}
 #    return "";
-    foreach my $str (@{$t->{entities}{urls}}) {push @res, "&".$str->{expanded_url}."[".join(",",@{$str->{indices}}).")";}
+
+    foreach my $str (@{$t->{entities}{urls}}) {push @res, "&".$t->{entities}{urls}."[".join(",",@{$str->{indices}}).")";}
+#    foreach my $str (@{$t->{entities}{urls}}) {push @res, "&".$str->{expanded_url}."[".join(",",@{$str->{indices}}).")";}
     if ($#res>=0) {return $SEP.join($SEP,@res);}
     return "";
 }
