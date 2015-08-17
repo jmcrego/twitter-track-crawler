@@ -7,7 +7,7 @@ while (<>){
 #    print "\tmessg1=$messg\n";
     for ($i=9; $i<=$#toks; $i++){
 #	print "\t\t[$i] '$toks[$i]'\n";
-	if ($toks[$i] =~ /^(_[A-Z]_)=(.+)\[(\d+),(\d+)\)$/){
+	if ($toks[$i] =~ /^(_[A-Z]*_)=(.+)\[(\d+),(\d+)\)$/){
 	    $tag=$1;
 	    $name=$2;
 	    $messg =~ s/${name}/${tag}/i;

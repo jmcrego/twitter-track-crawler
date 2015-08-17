@@ -22,35 +22,46 @@ while (1){
     $id=$t->{id};
     next if ($tweet_ids{$id});
     $tweet_ids{$id}=1;
-    @entities=&findEntities;
-    print decode_entities($id.&time.&user.&lang.&favorites.&retweets.&retweet_of.&geolocation.&messg.$SEP.join($SEP,@entities)."\n");
+    print decode_entities($id.&time.&user.&lang.&favorites.&retweets.&retweet_of.&geolocation.&messgEntities."\n");
     if ($t->{retweeted_status}){
         $t = $t->{retweeted_status};
         $id=$t->{id};
         next if ($tweet_ids{$id});
         $tweet_ids{$id}=1;
-	@entities=&findEntities;
-        print decode_entities($id.&time.&user.&lang.&favorites.&retweets.&retweet_of.&geolocation.&messg.$SEP.join($SEP,@entities)."\n");
+        print decode_entities($id.&time.&user.&lang.&favorites.&retweets.&retweet_of.&geolocation.&messgEntities."\n");
     }
 }
-sub findEntities{
-    @entities=();
-    $N=65;
-    foreach $entity (&hashtags){push @entities, "_".chr(${N})."_=".$entity;$N++;}
-    foreach $entity (&mentions){push @entities, "_".chr(${N})."_=".$entity;$N++;}
-    foreach $entity (&urls)    {push @entities, "_".chr(${N})."_=".$entity;$N++;}
-    foreach $entity (&symbols) {push @entities, "_".chr(${N})."_=".$entity;$N++;}
 
-#    foreach $entity (&hashtags){push @entities, &rndTag(10, 'A'..'Z')."=".$entity;}
-#    foreach $entity (&mentions){push @entities, &rndTag(10, 'A'..'Z')."=".$entity;}
-#    foreach $entity (&urls)    {push @entities, &rndTag(10, 'A'..'Z')."=".$entity;}
-#    foreach $entity (&symbols) {push @entities, &rndTag(10, 'A'..'Z')."=".$entity;}
-    return @entities;
+sub messgEntities{
+    my $str = $t->{text};
+    $str =~ s/\t/${TAB}/g;
+    $str =~ s/\n/${RET}/g;
+    $str =~ s/\r/${RET}/g;
+    my @entities=();
+    my $N=65;
+    my @ents=&hashtags;
+    push @ents, &mentions;
+    push @ents, &urls;
+    push @ents, &symbols;
+#    print "\tmessg1=$str\n";
+    foreach $entity (@ents){
+        if ($entity =~ /^(.+)\[(\d+),(\d+)\)$/){
+	    $name=$1;
+	    $tag="_".join("",(chr($N) x 5))."_";
+	    if ($str =~ s/${name}/${tag}/i){
+#		print "\t\tREPLACE '$name' => '$tag'\n";
+		push @entities,$tag."=".$entity;
+		$N++;
+	    }
+	}
+    }
+#    print "\tmessg2=$str\n";
+    return $SEP.$str.$SEP.join($SEP,@entities);
 }
 
-sub rndTag{ 
-    join '', @_[ map{ rand @_ } 1 .. shift ] ;
-}	
+
+
+
 sub readblock{
     my $lines;
     while(<>){
@@ -74,35 +85,23 @@ sub filter_level{
     return "";
 }
 sub geolocation{
-    my $location="-";
-    if ($t->{place}{country}){
-        my $country_code=$t->{place}{country_code};
-        #my $country=$t->{place}{country};
-        my $full_name=$t->{place}{full_name};
-        #my $name=$t->{place}{name};
-        #my $url=$t->{place}{url}
-	$location=${full_name}."|".${country_code};
-    }
-    return $SEP."G:".$location;    
+    return $SEP."G:"."-1" unless (defined $t->{place}{country});
+    return $SEP."G:".$t->{place}{full_name}."|".$t->{place}{country_code};
+    #my $t->{place}{country};
+    #my $t->{place}{name};
+    #my $t->{place}{url}
 }
 sub retweets{
-    return "" unless (defined $t->{retweet_count});
+    return $SEP."R:-1" unless (defined $t->{retweet_count});
     return $SEP."R:".$t->{retweet_count};
 }
 sub favorites{
-    return "" unless (defined $t->{favorite_count});
+    return $SEP."F:-1" unless (defined $t->{favorite_count});
     return $SEP."F:".$t->{favorite_count};
 }
 sub retweet_of{
     return $SEP."r:"."-1" unless (defined $t->{retweeted_status});
     return $SEP."r:".$t->{retweeted_status}{id};
-}
-sub messg{
-    my $str = $t->{text};
-    $str =~ s/\t/${TAB}/g;
-    $str =~ s/\n/${RET}/g;
-    $str =~ s/\r/${RET}/g;
-    return $SEP.$str;
 }
 
 
@@ -112,15 +111,11 @@ sub hashtags{
     my @res=();
     foreach my $str (@{$t->{entities}{hashtags}}) {push @res, "#".$str->{text}."[".join(",",@{$str->{indices}}).")";}
     return @res;
-    if ($#res>=0) {return $SEP.join($SEP,@res);}
-    return "";
 }
 sub mentions{
     my @res=();
     foreach my $str (@{$t->{entities}{user_mentions}}) {push @res, "@".$str->{screen_name}."[".join(",",@{$str->{indices}}).")";}
     return @res;
-    if ($#res>=0) {return $SEP.join($SEP,@res);}
-    return "";
 }
 sub urls{
     my @res=();
@@ -129,13 +124,9 @@ sub urls{
     #### media urls
     foreach my $str (@{$t->{entities}{media}}) {push @res, $str->{url}."[".join(",",@{$str->{indices}}).")";}
     return @res;
-    if ($#res>=0) {return $SEP.join($SEP,@res);}
-    return "";
 }
 sub symbols{
     my @res=();
     foreach my $str (@{$t->{entities}{symbols}}) {push @res, $str->{text}."[".join(",",@{$str->{indices}}).")";}
     return @res;
-    if ($#res>=0) {return $SEP.join($SEP,@res);}
-    return "";
 }
