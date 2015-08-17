@@ -4,17 +4,17 @@ while (<>){
     chomp;
     @toks = split /\t/;
     $messg=$toks[8];
-    print "\tmessg1=$messg\n";
+#    print "\tmessg1=$messg\n";
     for ($i=9; $i<=$#toks; $i++){
 	$ent=$toks[$i];
-	if ($ent =~ /^(.+)\[(\d+),(\d+)\)$/){
+	if ($ent =~ /^(.+)\[(\d+),(\d+)\)/){
 	    $name=$1;
-	    print "\t\tent[$i] name=$name ==> $ent\n";
-	    $letter=chr($i-9+65);
-	    $n=$3-$2-2;
-	    $letters="";
-	    for ($k=0;$k<$letters;$k++) {$letters.=$letter;}
-	    $messg =~ s/\Q${name}\E/_${letters}_/;
+	    $from=$2;
+	    $to=$3;
+	    $size=$to-$from;
+	    $letters = join("",("_") x $size);
+#	    print "\t\treplacing '$name'\n";
+	    $messg =~ s/${name}/${letters}/i;
 	}
     }
 #    print "\tmessg2=$messg\n";
