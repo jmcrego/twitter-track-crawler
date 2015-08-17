@@ -11,7 +11,7 @@ while (<>){
 	    $name=$2;
 	    $from=$3;
 	    $to=$4;
-	    $messg =~ s/${ent}/${type}${i}/;
+	    $messg =~ s/\Q${ent}\E/${type}${i}/;
 	}
     }
     $toks[8]=$messg;
