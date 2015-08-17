@@ -45,14 +45,22 @@ sub messgEntities{
     push @ents, &symbols;
 #    print "\tmessg1=$str\n";
     foreach $entity (@ents){
-        if ($entity =~ /^(.+)\[(\d+),(\d+)\)$/){
+        if ($entity =~ /^(.+)\[(\d+),(\d+)\)/){
 	    $name=$1;
+	    $from=$2;
+	    $to=$3;
 	    $tag="_".join("",(chr($N) x 5))."_";
 	    if ($str =~ s/${name}/${tag}/i){
 #		print "\t\tREPLACE '$name' => '$tag'\n";
 		push @entities,$tag."=".$entity;
 		$N++;
 	    }
+	    else{
+#		print STDERR "warning: unfound entity '${name}[${from},${to})' (tweet_id=$t->{id})\n";
+	    }
+	}
+	else{
+#	    print STDERR "warning: unparsed entity '$entity' (tweet_id=$t->{id})\n";
 	}
     }
 #    print "\tmessg2=$str\n";
@@ -114,15 +122,15 @@ sub hashtags{
 }
 sub mentions{
     my @res=();
-    foreach my $str (@{$t->{entities}{user_mentions}}) {push @res, "@".$str->{screen_name}."[".join(",",@{$str->{indices}}).")";}
+    foreach my $str (@{$t->{entities}{user_mentions}}) {push @res, "@".$str->{screen_name}."[".join(",",@{$str->{indices}}).")".":".$str->{id};}
     return @res;
 }
 sub urls{
     my @res=();
     ### regular urls
-    foreach my $str (@{$t->{entities}{urls}}) {push @res, $str->{url}."[".join(",",@{$str->{indices}}).")";}
+    foreach my $str (@{$t->{entities}{urls}}) {push @res, $str->{url}."[".join(",",@{$str->{indices}}).")".":".$str->{expanded_url};}
     #### media urls
-    foreach my $str (@{$t->{entities}{media}}) {push @res, $str->{url}."[".join(",",@{$str->{indices}}).")";}
+    foreach my $str (@{$t->{entities}{media}}) {push @res, $str->{url}."[".join(",",@{$str->{indices}}).")".":".$str->{type}.":".$str->{media_url};}
     return @res;
 }
 sub symbols{
