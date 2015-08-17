@@ -7,10 +7,11 @@ while (<>){
 #    print "\tmessg1=$messg\n";
     for ($i=9; $i<=$#toks; $i++){
 	$ent=$toks[$i];
-	if ($ent =~ /^(.+)\[\d+,\d+\)$/){
+	if ($ent =~ /^(.+)\[(\d+),(\d+)\)$/){
 	    $name=$1;
 #	    print "\t\tent[$i] name=$name ==> $ent\n";
-	    $messg =~ s/\Q${name}\E/___${i}___/;
+	    $letter=char ($i-9);
+	    $messg =~ s/\Q${name}\E/___${letter}___/;
 	}
     }
 #    print "\tmessg2=$messg\n";
