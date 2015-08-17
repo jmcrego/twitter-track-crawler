@@ -11,13 +11,13 @@ use utf8;
 binmode STDOUT,':utf8';
 binmode STDERR,':utf8';
 
-while ($#ARGV>=0){
-    $tok = shift @ARGV;
-    if ($tok eq "-replace_urls") {$replaceurls=1; next;}
-    if ($tok eq "-replace_htags") {$replacehtags=1; next;}
-    if ($tok eq "-replace_ment") {$replacement=1; next;}
-    if ($tok eq "-replace_media") {$replacemedia=1; next;}
-}
+#while ($#ARGV>=0){
+#    $tok = shift @ARGV;
+#    if ($tok eq "-replace_urls") {$replaceurls=1; next;}
+#    if ($tok eq "-replace_htags") {$replacehtags=1; next;}
+#    if ($tok eq "-replace_ment") {$replacement=1; next;}
+#    if ($tok eq "-replace_media") {$replacemedia=1; next;}
+#}
 
 our $SEP="\t";
 our $RET="✪"; # &#10030; &#x272e;
