@@ -6,11 +6,11 @@ while (<>){
     $messg=$toks[8];
     print "\tmessg1=$messg\n";
     for ($i=9; $i<=$#toks; $i++){
-	print "\t\tent[$i]=$ent\n";
 	$ent=$toks[$i];
 	if ($ent =~ /^(.)(.+)\[\d+,\d+\)$/){
 	    $type=$1;
 	    $name=$2;
+	    print "\t\tent[$i]=$ent ==> type=$type name=$name\n";
 	    $messg =~ s/\Q${type}${name}\E/${type}${i}/;
 	}
     }
