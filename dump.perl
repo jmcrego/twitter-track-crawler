@@ -81,21 +81,14 @@ sub retweet_of{
 }
 sub hashtags{
     my @res=();
-#    foreach my $str (@{$t->{entities}{hashtags}}) {push @res, "H:"."[".join(",",@{$str->{indices}}).")".$str->{text};}
-#    if ($#res>=0) {return $SEP.join($SEP,@res);}
-#    return "";
     foreach my $str (@{$t->{entities}{hashtags}}) {push @res, "#".$str->{text}."[".join(",",@{$str->{indices}}).")";}
     if ($#res>=0) {return $SEP.join($SEP,@res);}
     return "";
 }
 sub urls{
     my @res=();
-#    foreach my $str (@{$t->{entities}{urls}}) {push @res, "U:"."[".join(",",@{$str->{indices}}).")".$str->{expanded_url};}
-#    if ($#res>=0) {return $SEP.join($SEP,@res);}
-#    return "";
-
-    foreach my $str (@{$t->{entities}{urls}}) {push @res, "&".$str->{url}."[".join(",",@{$str->{indices}}).")";}
-#    foreach my $str (@{$t->{entities}{urls}}) {push @res, "&".$str->{expanded_url}."[".join(",",@{$str->{indices}}).")";}
+    foreach my $str (@{$t->{entities}{urls}}) {push @res, $str->{url}."[".join(",",@{$str->{indices}}).")";}
+#    foreach my $str (@{$t->{entities}{urls}}) {push @res, $str->{expanded_url}."[".join(",",@{$str->{indices}}).")";}
     if ($#res>=0) {return $SEP.join($SEP,@res);}
     return "";
 }
@@ -114,24 +107,20 @@ sub media{
             else {$url=$str->{media_url_https}};
         }
         else {$url=$str->{media_url_https}};
-#       push @res, "F:"."[".$indices.")".$str->{type}."=".$url;
         push @res, $str->{type}.$url."[".$indices.")";
     }
-#    foreach my $str (@{$t->{entities}{media}})          {push @res, "Z:"."[".join(",",@{$str->{indices}}).")".$str->{media_url_https};}
     if ($#res>=0) {return $SEP.join($SEP,@res);}
     return "";
 }
 sub mentions{
     my @res=();
-#    foreach my $str (@{$t->{entities}{user_mentions}}) {push @res, "M:"."[".join(",",@{$str->{indices}}).")".$str->{id}.":".$str->{screen_name};}
-#    if ($#res>=0) {return $SEP.join($SEP,@res);}
-    foreach my $str (@{$t->{entities}{user_mentions}}) {push @res, "@".$str->{screen_name}."[".join(",",@{$str->{indices}}).")".":".$str->{id};}
+    foreach my $str (@{$t->{entities}{user_mentions}}) {push @res, .$str->{screen_name}."[".join(",",@{$str->{indices}}).")".":".$str->{id};}
     if ($#res>=0) {return $SEP.join($SEP,@res);}
     return "";
 }
 sub symbols{
     my @res=();
-    foreach my $str (@{$t->{entities}{symbols}}) {push @res, "\$".$str->{text}."[".join(",",@{$str->{indices}}).")";}
+    foreach my $str (@{$t->{entities}{symbols}}) {push @res, $str->{text}."[".join(",",@{$str->{indices}}).")";}
     if ($#res>=0) {return $SEP.join($SEP,@res);}
     return "";
 }
