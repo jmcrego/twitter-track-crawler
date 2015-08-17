@@ -91,7 +91,7 @@ sub urls{
     foreach my $str (@{$t->{entities}{urls}}) {push @res, $str->{url}."[".join(",",@{$str->{indices}}).")";}
 
     #### media urls
-    foreach my $str (@{$t->{entities}{media}{urls}}) {push @res, $str->{url}."[".join(",",@{$str->{indices}}).")";}
+    foreach my $str (@{$t->{entities}{media}}) {push @res, $str->{url}."[".join(",",@{$str->{indices}}).")";}
 
     if ($#res>=0) {return $SEP.join($SEP,@res);}
     return "";
