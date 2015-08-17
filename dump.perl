@@ -22,13 +22,13 @@ while (1){
     $id=$t->{id};
     next if ($tweet_ids{$id});
     $tweet_ids{$id}=1;
-    print decode_entities($id.&time.&user.&lang.&favorites.&retweets.&retweet_of.&geolocation.&messg.&hashtags.&urls.&media.&mentions.&symbols."\n");
+    print decode_entities($id.&time.&user.&lang.&favorites.&retweets.&retweet_of.&geolocation.&messg.&hashtags.&urls.&mentions.&symbols."\n");
     if ($t->{retweeted_status}){
         $t = $t->{retweeted_status};
         $id=$t->{id};
         next if ($tweet_ids{$id});
         $tweet_ids{$id}=1;
-        print decode_entities($id.&time.&user.&lang.&favorites.&retweets.&retweet_of.&geolocation.&messg.&hashtags.&urls.&media.&mentions.&symbols."\n");
+        print decode_entities($id.&time.&user.&lang.&favorites.&retweets.&retweet_of.&geolocation.&messg.&hashtags.&urls.&mentions.&symbols."\n");
     }
 }
 sub readblock{
@@ -85,6 +85,12 @@ sub hashtags{
     if ($#res>=0) {return $SEP.join($SEP,@res);}
     return "";
 }
+sub mentions{
+    my @res=();
+    foreach my $str (@{$t->{entities}{user_mentions}}) {push @res, "@".$str->{screen_name}."[".join(",",@{$str->{indices}}).")".":".$str->{id};}
+    if ($#res>=0) {return $SEP.join($SEP,@res);}
+    return "";
+}
 sub urls{
     my @res=();
     ### regular urls
@@ -93,32 +99,6 @@ sub urls{
     #### media urls
     foreach my $str (@{$t->{entities}{media}}) {push @res, $str->{url}."[".join(",",@{$str->{indices}}).")";}
 
-    if ($#res>=0) {return $SEP.join($SEP,@res);}
-    return "";
-}
-sub media{
-    my @res=();
-    my %output=();
-    foreach my $str (@{$t->{extended_entities}{media}}) {
-        next if (exists $output{$str->{url}});
-        $output{$str->{url}}=1;
-        ### collect features
-        my $indices = join(",",@{$str->{indices}});
-        my $url;
-        if ($str->{type} eq "video") {
-            my @urls = @{$str->{video_info}{variants}};
-            if ($#urls>=0) {$url=$urls[0]->{url};}
-            else {$url=$str->{media_url_https}};
-        }
-        else {$url=$str->{media_url_https}};
-        push @res, $str->{type}.$url."[".$indices.")kkmediakk";
-    }
-    if ($#res>=0) {return $SEP.join($SEP,@res);}
-    return "";
-}
-sub mentions{
-    my @res=();
-    foreach my $str (@{$t->{entities}{user_mentions}}) {push @res, .$str->{screen_name}."[".join(",",@{$str->{indices}}).")".":".$str->{id};}
     if ($#res>=0) {return $SEP.join($SEP,@res);}
     return "";
 }
