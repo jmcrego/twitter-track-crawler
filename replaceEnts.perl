@@ -10,7 +10,7 @@ while (<>){
 	if ($ent =~ /^(.+)\[(\d+),(\d+)\)$/){
 	    $name=$1;
 #	    print "\t\tent[$i] name=$name ==> $ent\n";
-	    $letter=chr($i-9);
+	    $letter=chr($i-9+65);
 	    $messg =~ s/\Q${name}\E/___${letter}___/;
 	}
     }
