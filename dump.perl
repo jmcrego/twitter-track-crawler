@@ -22,13 +22,13 @@ while (1){
     $id=$t->{id};
     next if ($tweet_ids{$id});
     $tweet_ids{$id}=1;
-    print decode_entities($id.&time.&user.&lang.&favorites.&retweets.&retweet_of.&geolocation.&messgEntities."\n");
+    print decode_entities(&messgEntities.$SEP."i:".$id.&time.&user.&lang.&favorites.&retweets.&retweet_of.&geolocation."\n");
     if ($t->{retweeted_status}){
         $t = $t->{retweeted_status};
         $id=$t->{id};
         next if ($tweet_ids{$id});
         $tweet_ids{$id}=1;
-        print decode_entities($id.&time.&user.&lang.&favorites.&retweets.&retweet_of.&geolocation.&messgEntities."\n");
+        print decode_entities(&messgEntities.$SEP."i:".$id.&time.&user.&lang.&favorites.&retweets.&retweet_of.&geolocation."\n");
     }
 }
 
@@ -52,7 +52,7 @@ sub messgEntities{
 	    $tag="_".join("",(chr($N) x 5))."_";
 	    if ($str =~ s/${name}/${tag}/i){
 #		print "\t\tREPLACE '$name' => '$tag'\n";
-		push @entities,$tag."=".$entity;
+		push @entities,$tag.":".$entity;
 		$N++;
 	    }
 	    else{
@@ -64,7 +64,7 @@ sub messgEntities{
 	}
     }
 #    print "\tmessg2=$str\n";
-    return $SEP.$str.$SEP.join($SEP,@entities);
+    return $str.$SEP.join($SEP,@entities);
 }
 
 
@@ -88,10 +88,7 @@ sub user{
 sub lang{
     return $SEP."l:".$t->{lang};
 }
-sub filter_level{
-    if ($t->{filter_level}) {return $SEP."f:".$t->{filter_level};}
-    return "";
-}
+
 sub geolocation{
     return $SEP."G:"."-1" unless (defined $t->{place}{country});
     return $SEP."G:".$t->{place}{full_name}."|".$t->{place}{country_code};
@@ -104,8 +101,8 @@ sub retweets{
     return $SEP."R:".$t->{retweet_count};
 }
 sub favorites{
-    return $SEP."F:-1" unless (defined $t->{favorite_count});
-    return $SEP."F:".$t->{favorite_count};
+    return $SEP."f:-1" unless (defined $t->{favorite_count});
+    return $SEP."f:".$t->{favorite_count};
 }
 sub retweet_of{
     return $SEP."r:"."-1" unless (defined $t->{retweeted_status});
@@ -122,15 +119,15 @@ sub hashtags{
 }
 sub mentions{
     my @res=();
-    foreach my $str (@{$t->{entities}{user_mentions}}) {push @res, "@".$str->{screen_name}."[".join(",",@{$str->{indices}}).")".":".$str->{id};}
+    foreach my $str (@{$t->{entities}{user_mentions}}) {push @res, "@".$str->{screen_name}."[".join(",",@{$str->{indices}}).")".$str->{id};}
     return @res;
 }
 sub urls{
     my @res=();
     ### regular urls
-    foreach my $str (@{$t->{entities}{urls}}) {push @res, $str->{url}."[".join(",",@{$str->{indices}}).")".":".$str->{expanded_url};}
+    foreach my $str (@{$t->{entities}{urls}}) {push @res, $str->{url}."[".join(",",@{$str->{indices}}).")".$str->{expanded_url};}
     #### media urls
-    foreach my $str (@{$t->{entities}{media}}) {push @res, $str->{url}."[".join(",",@{$str->{indices}}).")".":".$str->{type}.":".$str->{media_url};}
+    foreach my $str (@{$t->{entities}{media}}) {push @res, $str->{url}."[".join(",",@{$str->{indices}}).")"."[type=".$str->{type}."]".$str->{media_url};}
     return @res;
 }
 sub symbols{
