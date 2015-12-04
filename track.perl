@@ -54,6 +54,8 @@ FLOG->autoflush;
 ### MAIN LOOP ##############################################################
 ############################################################################
 
+$timeout=900; #15 mins
+
 $done = AnyEvent->condvar;
 $listener = AnyEvent::Twitter::Stream->new(
     consumer_key    => $consumer_key,
@@ -62,11 +64,11 @@ $listener = AnyEvent::Twitter::Stream->new(
     token_secret    => $token_secret,
     on_tweet        => sub {print FOUT Dumper(shift);FOUT->autoflush;},
     on_delete       => sub {print FLOG "delete [".shift."] (user_id=".shift.") @ ".ctime()."\n";FLOG->autoflush;},
-    on_error        => sub {print FLOG "error [".shift."] @ ".ctime()."\nsleep 90\n";FLOG->autoflush;sleep 90;},
+    on_error        => sub {print FLOG "error [".shift."] @ ".ctime()."\nsleep $timeout\n";FLOG->autoflush;sleep $timeout;},
     on_keepalive    => sub {print FLOG "keepalive [".shift."] @ ".ctime()."\n";FLOG->autoflush;},
     on_connect      => sub {print FLOG "connect [".shift."] @ ".ctime()."\n";FLOG->autoflush;},
     on_eof          => sub {print FLOG "eof [".shift."] @ ".ctime()."\n";FLOG->autoflush;},
-    timeout         => 90,
+    timeout         => $timeout,
     method          => filter,
     filter_level    => none,
     language        => $language,
