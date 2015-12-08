@@ -48,6 +48,8 @@ print FLOG "keys\n\t$consumer_key\n\t$consumer_secret\n\t$token\n\t$token_secret
 print FLOG "track\t$track\n";
 print FLOG "lang\t$language\n";
 print FLOG "fout\t$fout.tweets\n";
+print FLOG "flog\t$fout.log\n";
+print FLOG "pid\t".$$."\n";
 FLOG->autoflush;
 
 ############################################################################
