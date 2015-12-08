@@ -24,6 +24,7 @@ Example:
 adapted from: https://github.com/miyagawa/AnyEvent-Twitter-Stream
 ";
 
+my $run="$0 @ARGV";
 while ($#ARGV>=0){
     $tok = shift @ARGV;
     if ($tok eq "-w" && $#ARGV>=0) {$track=shift @ARGV; next;}
@@ -50,6 +51,7 @@ print FLOG "lang\t$language\n";
 print FLOG "fout\t$fout.tweets\n";
 print FLOG "flog\t$fout.log\n";
 print FLOG "pid\t".$$."\n";
+print FLOG "run\t$run\n";
 FLOG->autoflush;
 
 ############################################################################
