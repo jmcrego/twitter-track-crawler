@@ -22,7 +22,6 @@ $usage="$0 -q \"STRING\" -k FILE -l LANG -s ID
    -l LANG   : language (default: not used)
    -k FILE   : key file
    -s ID     : since_id
-   -log FILE : log file
 
 Tweets (timelines) flow over time like:
 lower IDs                                    higher IDs
@@ -50,29 +49,14 @@ while ($#ARGV>=0){
     if ($tok eq "-l" && $#ARGV>=0)  {$_lang=shift @ARGV; next;} 
     if ($tok eq "-k" && $#ARGV>=0)  {$_fkey=shift @ARGV; next;} 
     if ($tok eq "-s" && $#ARGV>=0)  {$_since_id=shift @ARGV; next;} 
-    if ($tok eq "-log" && $#ARGV>=0){$_flog=shift @ARGV; next;} 
     die "error: unparsed '$tok' option\n$usage";
 }
 die "error: missing -q option\n$usage" unless (defined $_query);
 die "error: missing -l option\n$usage" unless (defined $_lang);
 die "error: missing -k option\n$usage" unless (defined $_fkey);
 
-if ($_flog){
-    open (LOG,">$_flog") or die "error: cannot open log file: $_flog\n";
-    while (<LOG>){
-	if (/recent_id=(\d+)/) {$_since_id=$1 if ($1>$_since_id);}
-    }
-    close LOG;
-}
-
-my ($consumer_key,$consumer_secret,$token,$token_secret) = &application($_fkey);
-my $nt = Net::Twitter->new(traits => [qw/API::RESTv1_1/], 
-			consumer_key => $consumer_key, 
-			consumer_secret => $consumer_secret, 
-			access_token => $token, 
-			access_token_secret => $token_secret, 
-			ssl => 1);
-
+my ($ckey,$csecret,$tok,$tsecret) = &application($_fkey);
+my $nt = Net::Twitter->new(traits => [qw/API::RESTv1_1/], consumer_key => $ckey, consumer_secret => $csecret, access_token => $tok, access_token_secret => $tsecret, ssl => 1);
 my $status=$nt->rate_limit_status({ authenticate => 1 });
 my $nrequestsremaining=$status->{"resources"}{"search"}{"/search/tweets"}{"remaining"};
 
@@ -81,7 +65,7 @@ $query{"q"}=$_query;
 $query{"lang"}=$_lang;
 $query{"result_type"}=$_rtype;
 $query{"count"}=$_count;
-$query{"since_id"}=$_since_id unless ($_since_id == 0);
+$query{"since_id"}=$_since_id if ($_since_id>0);
 
 while (true){
     die "[END] error: $nrequests requests already sent!\n" unless ($nrequestsremaining>0);
@@ -97,14 +81,18 @@ while (true){
     my $curr_last_id=0;
     foreach $entry (@{$r->{statuses}}){
 	my $id = $entry->{id};
-	$most_recent_id=$id if ($most_recent_id==0 || $id>$most_recent_id);
+	if ($id>$most_recent_id){
+	    $most_recent_id=$id;
+	    print STDERR "recent_id=$most_recent_id\n";
+	}
 	$curr_first_id=$id if ($curr_first_id==0 || $id<$curr_first_id);
 	$curr_last_id=$id if ($curr_last_id==0 || $id>$curr_last_id);
 	print Dumper($entry);
     }
-####    $dumped=Dumper(\%query); $dumped=~s/[\n\s]+/ /g;
+####
+    $dumped=Dumper(\%query); $dumped=~s/[\n\s]+/ /g; print STDERR "($now) $dumped\n";
     my $nstatuses=scalar(@{$r->{statuses}});
-    print STDERR "[OK] $nstatuses since_id=".($query{"since_id"})." max_id=".($query{"max_id"})." => [$curr_first_id,$curr_last_id] recent_id=$most_recent_id remain=$nrequestsremaining\n";
+    print STDERR "[OK] $nstatuses since_id=".($query{"since_id"})." max_id=".($query{"max_id"})." => [$curr_first_id,$curr_last_id] remain=$nrequestsremaining\n";
     die "[KO] error: 0 statuses fetched!\n" unless ($nstatuses);
     die "[END] since_id REACHED ($_since_id)\n" if ($_since_id && $curr_first_id<=$_since_id);
     $query{"max_id"}=$curr_first_id-1 if ($curr_first_id);
