@@ -13,15 +13,17 @@ binmode STDOUT,':utf8';
 binmode STDERR,':utf8';
 use IO::Handle;
 
-$_count       = 100;
-$_rtype       = "recent";
-$_since_id    = 0;
+$_count        = 100;
+$_rtype        = "recent";
+$_since_id     = 0;
+$_max_requests = 180;
 
 $usage="$0 -q \"STRING\" -k FILE -l LANG -s ID
    -q STRING : list of terms (Ex: \"earthquake OR extreme heat\")
    -l LANG   : language (default: not used)
    -k FILE   : key file
    -s ID     : since_id
+   -m N      : max number of requests
 
 Tweets (timelines) flow over time like:
 lower IDs                                    higher IDs
@@ -44,11 +46,12 @@ Hence, on succeeding fetchs we use max_id to prevent tweets newer than a given I
 
 while ($#ARGV>=0){
     $tok = shift @ARGV;
-    if ($tok eq "-q" && $#ARGV>=0)  {$_query=&escape(decode("utf-8",shift @ARGV)); next;} 
-#    if ($tok eq "-q" && $#ARGV>=0) {$_query=decode("utf-8",shift @ARGV); next;} 
+#    if ($tok eq "-q" && $#ARGV>=0)  {$_query=&escape(decode("utf-8",shift @ARGV)); next;} 
+    if ($tok eq "-q" && $#ARGV>=0) {$_query=decode("utf-8",shift @ARGV); next;} 
     if ($tok eq "-l" && $#ARGV>=0)  {$_lang=shift @ARGV; next;} 
     if ($tok eq "-k" && $#ARGV>=0)  {$_fkey=shift @ARGV; next;} 
     if ($tok eq "-s" && $#ARGV>=0)  {$_since_id=shift @ARGV; next;} 
+    if ($tok eq "-m" && $#ARGV>=0)  {$_max_requests=shift @ARGV; next;} 
     die "error: unparsed '$tok' option\n$usage";
 }
 die "error: missing -q option\n$usage" unless (defined $_query);
@@ -67,8 +70,10 @@ $query{"result_type"}=$_rtype;
 $query{"count"}=$_count;
 $query{"since_id"}=$_since_id if ($_since_id>0);
 
+$nrequests=0;
 while (true){
-    die "[END] error: $nrequests requests already sent!\n" unless ($nrequestsremaining>0);
+    die "[END] no requests available!\n" unless ($nrequestsremaining>0);
+    die "[END] max requests=$nrequests reached!\n" if ($nrequests>$_max_requests);
     $now=&whattimeisit;
     my $r;
     eval { $r = $nt->search(\%query) };
@@ -77,6 +82,7 @@ while (true){
 	die "[KO] error: HTTP Response Code:".$err->code." HTTP Message:".$err->message." Twitter error:".$err->error."\n";
     }
     $nrequestsremaining--;
+    $nrequests++;
     my $curr_first_id=0;
     my $curr_last_id=0;
     foreach $entry (@{$r->{statuses}}){
