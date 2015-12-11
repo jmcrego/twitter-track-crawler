@@ -8,11 +8,6 @@ binmode STDIN, ':utf8';
 binmode STDOUT,':utf8';
 binmode STDERR,':utf8';
 
-$consumer_key    = '1S6WuT1cHb1aheXgIMyc2MOpx';
-$consumer_secret = 'KmCP00Fhwzb5pWcZZUe2bXK9jj6SA18fLziyN7DViR8Ml2QVRW';
-$token           = '245973415-guYTAXRlctmsN0cWvuZuZvs03f0H5FZpcEnz7QFJ';
-$token_secret    = 'Xy5bCBCaj1IWsKF1VQ3ZiFGMHRc0MOGxHxN9W2huq5Xg1'; 
-
 $usage="$0 [-f FILE -l STRING] [-i WOEID]
    -f FILE   : file with dumped locations
    -l STRING : Type=Location (Ex Town=Paris=France)
