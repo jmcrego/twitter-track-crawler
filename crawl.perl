@@ -16,7 +16,7 @@ binmode STDOUT,':utf8';
 binmode STDERR,':utf8';
 
 for ($i=0; $i<=$#ARGV; $i++) {$ARGV[$i] = decode("utf-8", $ARGV[$i]);}
-print STDERR "RUN: $0 @ARGV\n";
+$parameters="@ARGV";
 
 $_count        = 100;
 $_rtype        = "recent";
@@ -43,20 +43,25 @@ Hence, on succeeding fetchs we use max_id to prevent tweets newer than a given I
 -----------------------[-----]--------------->
 ";
 
-$usage="$0 -q \"STRING\" -k FILE -l LANG [-s ID] [-h]
-   -q STRING : list of terms (Ex: \"earthquake OR extreme heat\")
-   -l LANG   : language (default: not used)
+$usage="$0 -k FILE (query OR geolocation OR trends)
+           -q \"STRING\" -l LANG [-s ID] [-m INT] (query)
+           -g                                   (geolocation)
+           -t WOEID                             (trends)
    -k FILE   : key file
+   -q STRING : list of terms in query mode (Ex: \"earthquake OR extreme heat\")
+   -g        : geolocation mode
+   -t WOEID  : WOEID in trends mode
+   -l LANG   : language (default: not used)
    -s ID     : since_id
    -m N      : max number of requests
-   -h        : further help message
+   -h        : help message
 ";
 
 while ($#ARGV>=0){
     $tok = shift @ARGV;
-#    if ($tok eq "-q" && $#ARGV>=0){$_query=&escape(shift @ARGV); next;} 
+    if ($tok eq "-g") {$_geolocation=1; next;} 
+    if ($tok eq "-t" && $#ARGV>=0) {$_trends=shift @ARGV; next;} 
     if ($tok eq "-q" && $#ARGV>=0) {$_query=shift @ARGV; next;} 
-
     if ($tok eq "-l" && $#ARGV>=0) {$_lang=shift @ARGV; next;} 
     if ($tok eq "-k" && $#ARGV>=0) {$_fkey=shift @ARGV; next;} 
     if ($tok eq "-s" && $#ARGV>=0) {$_since_id=shift @ARGV; next;} 
@@ -64,12 +69,38 @@ while ($#ARGV>=0){
     if ($tok eq "-h") {print $usage.$help."\n"; exit;} 
     die "error: unparsed '$tok' option\n$usage";
 }
-die "error: missing -q option\n$usage" unless (defined $_query);
-die "error: missing -l option\n$usage" unless (defined $_lang);
-die "error: missing -k option\n$usage" unless (defined $_fkey);
 
+die "error: missing -k option\n$usage" unless (defined $_fkey);
 my ($ckey,$csecret,$tok,$tsecret) = &application($_fkey);
-my $nt = Net::Twitter->new(traits => [qw/API::RESTv1_1/], consumer_key => $ckey, consumer_secret => $csecret, access_token => $tok, access_token_secret => $tsecret, ssl => 1);
+my $nt = Net::Twitter->new(traits=>[qw/API::RESTv1_1/], consumer_key=>$ckey, consumer_secret=>$csecret, access_token=>$tok, access_token_secret=>$tsecret, ssl=>1);
+
+if (defined $_trends){
+    print Dumper $nt->trends_place($_trends);
+#    $r = $nt->trends_place($_trends);
+#    foreach $entry (@{$r}){
+#	print $entry->{created_at}."\n";
+#	foreach $trend (@{$entry->{trends}}){
+#	    print $trend->{name}."\n";
+#	}
+#    }
+    exit;
+}
+elsif (defined $_geolocation){
+    print Dumper $nt->trends_available();
+#    $r = $nt->trends_available();
+#    foreach $entry (@{$r}){
+#	print "$entry->{name}:$entry->{country}\t$entry->{woeid}\t$entry->{placeType}{name}\n";
+#    }
+    exit;
+}
+elsif (defined $_query){
+    die "error: missing -l option\n$usage" unless (defined $_lang);
+}
+else{
+   die "error: missing -q OR -g OR -t options\n$usage";
+}
+
+print STDERR "RUN: $0 $parameters\n";
 my $status=$nt->rate_limit_status({ authenticate => 1 });
 my $nrequestsremaining=$status->{"resources"}{"search"}{"/search/tweets"}{"remaining"};
 
