@@ -12,11 +12,12 @@ $usage="$0 [-i] [-t] [-u] [-l] [-g] [-r] [-R] [-f] [-e]
    -t : time/date ({created_at})
    -u : user ({user}{id},{user}{screen_name})
    -l : language ({lang})
-   -g : geolocation ({place}{full_name},{place}{country_code})
+   -g : geolocation ({place}{full_name})
    -x : retweet of ({retweeted_status}{id})
    -r : num of retweets ({retweet_count})
    -f : num of favorites ({favorite_count})
    -e : entities (hashtags,mentions,urls,symbols)
+   -all : all options
 ";
 
 while ($#ARGV>=0){
@@ -31,6 +32,7 @@ while ($#ARGV>=0){
     if ($tok eq "-r") {$do_r=1;next;}
     if ($tok eq "-f") {$do_f=1;next;}
     if ($tok eq "-e") {$do_e=1;next;}
+    if ($tok eq "-all") {$do_i=1;$do_t=1;$do_u=1;$do_l=1;$do_g=1;$do_x=1;$do_r=1;$do_f=1;$do_e=1;next;}
     die "error: unparsed $tok option\n$usage";
 }
 
@@ -54,16 +56,18 @@ exit;
 sub parse{
     next if ($tweet_ids{$t->{id}});
     $tweet_ids{$t->{id}}=1;
-    @line=();
-    push @line,&messgEntities($do_e);
+    @messg = split /\t/,&messgEntities($do_e);
+
+    push @line,shift @messg;
     if ($do_i){push @line,"i:".$t->{id};}
     if ($do_t){push @line,"t:".&time;}
     if ($do_u){push @line,"u:".$t->{user}{id}.":".$t->{user}{screen_name};}
     if ($do_l){push @line,"l:".$t->{lang};}
-    if ($do_g){push @line,"g:".$t->{place}{full_name}."|".$t->{place}{country_code};}
+    if ($do_g){push @line,"g:".($t->{place}{id} ? $t->{place}{id}.":".$t->{place}{full_name} : "");}
     if ($do_x){push @line,"x:".$t->{retweeted_status}{id};}
     if ($do_r){push @line,"r:".$t->{retweet_count};}
     if ($do_f){push @line,"f:".$t->{favorite_count};}
+    if ($do_e){push @line,@messg;}
     print decode_entities(join($SEP,@line)."\n");
 }
 
@@ -76,7 +80,8 @@ sub messgEntities{
     return $str if (!$do_e);
     my @entities=();
     my $N=65;
-    my @ents;
+    my $M=97;
+    my @ents=();
     push @ents, &hashtags;
     push @ents, &mentions;
     push @ents, &urls;
@@ -87,17 +92,15 @@ sub messgEntities{
 	    $name=$1;
 	    $from=$2;
 	    $to=$3;
-	    $tag="_".join("",(chr($N) x 5))."_";
 	    if ($str =~ s/${name}/${tag}/i){
-#		print "\t\tREPLACE '$name' => '$tag'\n";
+		$tag="_".join("",(chr($N) x 5))."_"; $N++;
 		push @entities,$tag.":".$entity;
-		$N++;
+#		print "\t\tREPLACE '$name' => '$tag'\n";
 	    }
 	    else{
-		$tag="_".join("",(chr($N) x 5))."_";
+		$tag="_".join("",(chr($M) x 5))."_"; $M++;
 		push @entities,$tag.":".$entity;
-		$N++;
-#		print STDERR "warning: unfound entity '${name}[${from},${to})' on messg: $t->{text} (tweet_id=$t->{id})\n";
+#		print "\t\tREPLACE '$name' => '$tag'\n";
 	    }
 	}
 	else{
@@ -105,7 +108,7 @@ sub messgEntities{
 	}
     }
 #    print "\tmessg2=$str\n";
-    return $str.$SEP.join(" ",@entities);
+    return $str.$SEP.join($SEP,@entities);
 }
 
 sub readblock{
