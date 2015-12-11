@@ -148,23 +148,13 @@ while (true){
     }
     $dumped=Dumper(\%query); $dumped=~s/[\n\s]+/ /g; print STDERR "($now) $dumped\n";
     my $nstatuses=scalar(@{$r->{statuses}});
-    die "[KO] error: 0 statuses fetched!\n" unless ($nstatuses);
     die "[END] since_id REACHED ($_since_id)\n" if ($_since_id && $curr_first_id<=$_since_id);
     ### OK
     print STDERR "[OK] $nstatuses [$curr_first_id,$curr_last_id] [$curr_first_date,$curr_last_date] remain=$nrequestsremaining\n";
+    exit unless ($nstatuses);
     if ($curr_first_id) {$query{"max_id"}=$curr_first_id-1;}
 }
 exit;
-
-sub escape{
-    $str = shift;
-    $out = "";
-    while ($str =~/(.)/g){
-	if (ord($1)>=128) {$out .= "\\$1";}
-	else {$out .= $1;}
-    }
-    return $out;
-}
 
 sub application{
     my $fkey = shift @_;
