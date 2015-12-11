@@ -1,9 +1,5 @@
 #!/usr/bin/perl
 
-#use strict;
-#use warnings;
-#require Encode;
-#use Data::Dumper;
 use HTML::Entities;
 use Time::Piece;
 use utf8;
@@ -11,35 +7,77 @@ use utf8;
 binmode STDOUT,':utf8';
 binmode STDERR,':utf8';
 
+$usage="$0 [-i] [-t] [-u] [-l] [-g] [-r] [-R] [-f] [-e]
+   -i : id ({id})
+   -t : time/date ({created_at})
+   -u : user ({user}{id},{user}{screen_name})
+   -l : language ({lang})
+   -g : geolocation ({place}{full_name},{place}{country_code})
+   -x : retweet of ({retweeted_status}{id})
+   -r : num of retweets ({retweet_count})
+   -f : num of favorites ({favorite_count})
+   -e : entities (hashtags,mentions,urls,symbols)
+";
+
+while ($#ARGV>=0){
+    $tok = shift @ARGV;
+    if ($tok eq "-h") {print $usage;exit;}
+    if ($tok eq "-i") {$do_i=1;next;}
+    if ($tok eq "-t") {$do_t=1;next;}
+    if ($tok eq "-u") {$do_u=1;next;}
+    if ($tok eq "-l") {$do_l=1;next;}
+    if ($tok eq "-g") {$do_g=1;next;}
+    if ($tok eq "-x") {$do_x=1;next;}
+    if ($tok eq "-r") {$do_r=1;next;}
+    if ($tok eq "-f") {$do_f=1;next;}
+    if ($tok eq "-e") {$do_e=1;next;}
+    die "error: unparsed $tok option\n$usage";
+}
+
 our $SEP="\t";
 our $RET="✪"; # &#10030; &#x272e;
 our $TAB="❂"; # &#10050; &#x2742;
 our $t;
+
 %tweet_ids=();
 while (1){
     $t1 = eval &readblock;
     $t = \%{ $t1 };
-    $id=$t->{id};
-    next if ($tweet_ids{$id});
-    $tweet_ids{$id}=1;
-    print decode_entities(&messgEntities.$SEP."i:".$id.&time.&user.&lang.&favorites.&retweets.&retweet_of.&geolocation."\n");
+    &parse;
     if ($t->{retweeted_status}){
         $t = $t->{retweeted_status};
-        $id=$t->{id};
-        next if ($tweet_ids{$id});
-        $tweet_ids{$id}=1;
-        print decode_entities(&messgEntities.$SEP."i:".$id.&time.&user.&lang.&favorites.&retweets.&retweet_of.&geolocation."\n");
+	&parse;
     }
+}
+exit;
+
+sub parse{
+    next if ($tweet_ids{$t->{id}});
+    $tweet_ids{$t->{id}}=1;
+    @line=();
+    push @line,&messgEntities($do_e);
+    if ($do_i){push @line,"i:".$t->{id};}
+    if ($do_t){push @line,"t:".&time;}
+    if ($do_u){push @line,"u:".$t->{user}{id}.":".$t->{user}{screen_name};}
+    if ($do_l){push @line,"l:".$t->{lang};}
+    if ($do_g){push @line,"g:".$t->{place}{full_name}."|".$t->{place}{country_code};}
+    if ($do_x){push @line,"x:".$t->{retweeted_status}{id};}
+    if ($do_r){push @line,"r:".$t->{retweet_count};}
+    if ($do_f){push @line,"f:".$t->{favorite_count};}
+    print decode_entities(join($SEP,@line)."\n");
 }
 
 sub messgEntities{
+    my $do_e=shift;
     my $str = $t->{text};
     $str =~ s/\t/${TAB}/g;
     $str =~ s/\n/${RET}/g;
     $str =~ s/\r/${RET}/g;
+    return $str if (!$do_e);
     my @entities=();
     my $N=65;
-    my @ents=&hashtags;
+    my @ents;
+    push @ents, &hashtags;
     push @ents, &mentions;
     push @ents, &urls;
     push @ents, &symbols;
@@ -56,19 +94,19 @@ sub messgEntities{
 		$N++;
 	    }
 	    else{
-#		print STDERR "warning: unfound entity '${name}[${from},${to})' (tweet_id=$t->{id})\n";
+		$tag="_".join("",(chr($N) x 5))."_";
+		push @entities,$tag.":".$entity;
+		$N++;
+#		print STDERR "warning: unfound entity '${name}[${from},${to})' on messg: $t->{text} (tweet_id=$t->{id})\n";
 	    }
 	}
 	else{
-#	    print STDERR "warning: unparsed entity '$entity' (tweet_id=$t->{id})\n";
+	    print STDERR "warning: unparsed entity '$entity' (tweet_id=$t->{id})\n";
 	}
     }
 #    print "\tmessg2=$str\n";
-    return $str.$SEP.join($SEP,@entities);
+    return $str.$SEP.join(" ",@entities);
 }
-
-
-
 
 sub readblock{
     my $lines;
@@ -79,14 +117,10 @@ sub readblock{
     exit; ### end of file
 }
 sub time{
-    my $tp = localtime Time::Piece->strptime( $t->{created_at}, "%a %b %d %T %z %Y")->epoch;
-    return $SEP."t:".$tp->datetime;
+    my $tp = localtime Time::Piece->strptime($t->{created_at}, "%a %b %d %T %z %Y")->epoch;
+    return $tp->datetime;
 }
 sub user{
-    return $SEP."u:".$t->{user}{id}.":".$t->{user}{screen_name};
-}
-sub lang{
-    return $SEP."l:".$t->{lang};
 }
 
 sub geolocation{
