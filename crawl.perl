@@ -6,26 +6,25 @@ use Net::Twitter;
 use Data::Dumper;
 use Time::localtime;
 use Time::Piece;
-use Encode;
 use utf8;
+use Encode;
+#use Encode qw(decode encode);
+#use IO::Handle;
+
 binmode STDIN, ':utf8';
 binmode STDOUT,':utf8';
 binmode STDERR,':utf8';
-use IO::Handle;
+
+for ($i=0; $i<=$#ARGV; $i++) {$ARGV[$i] = decode("utf-8", $ARGV[$i]);}
+print STDERR "RUN: $0 @ARGV\n";
 
 $_count        = 100;
 $_rtype        = "recent";
 $_since_id     = 0;
 $_max_requests = 180;
 
-$usage="$0 -q \"STRING\" -k FILE -l LANG -s ID
-   -q STRING : list of terms (Ex: \"earthquake OR extreme heat\")
-   -l LANG   : language (default: not used)
-   -k FILE   : key file
-   -s ID     : since_id
-   -m N      : max number of requests
-
-Tweets (timelines) flow over time like:
+$help="
+Tweets (timelines) flow over time:
 lower IDs                                    higher IDs
 --------------------------------------------->
 PAST                                         PRESENT
@@ -44,14 +43,25 @@ Hence, on succeeding fetchs we use max_id to prevent tweets newer than a given I
 -----------------------[-----]--------------->
 ";
 
+$usage="$0 -q \"STRING\" -k FILE -l LANG [-s ID] [-h]
+   -q STRING : list of terms (Ex: \"earthquake OR extreme heat\")
+   -l LANG   : language (default: not used)
+   -k FILE   : key file
+   -s ID     : since_id
+   -m N      : max number of requests
+   -h        : further help message
+";
+
 while ($#ARGV>=0){
     $tok = shift @ARGV;
-#    if ($tok eq "-q" && $#ARGV>=0)  {$_query=&escape(decode("utf-8",shift @ARGV)); next;} 
-    if ($tok eq "-q" && $#ARGV>=0) {$_query=decode("utf-8",shift @ARGV); next;} 
-    if ($tok eq "-l" && $#ARGV>=0)  {$_lang=shift @ARGV; next;} 
-    if ($tok eq "-k" && $#ARGV>=0)  {$_fkey=shift @ARGV; next;} 
-    if ($tok eq "-s" && $#ARGV>=0)  {$_since_id=shift @ARGV; next;} 
-    if ($tok eq "-m" && $#ARGV>=0)  {$_max_requests=shift @ARGV; next;} 
+#    if ($tok eq "-q" && $#ARGV>=0){$_query=&escape(shift @ARGV); next;} 
+    if ($tok eq "-q" && $#ARGV>=0) {$_query=shift @ARGV; next;} 
+
+    if ($tok eq "-l" && $#ARGV>=0) {$_lang=shift @ARGV; next;} 
+    if ($tok eq "-k" && $#ARGV>=0) {$_fkey=shift @ARGV; next;} 
+    if ($tok eq "-s" && $#ARGV>=0) {$_since_id=shift @ARGV; next;} 
+    if ($tok eq "-m" && $#ARGV>=0) {$_max_requests=shift @ARGV; next;} 
+    if ($tok eq "-h") {print $usage.$help."\n"; exit;} 
     die "error: unparsed '$tok' option\n$usage";
 }
 die "error: missing -q option\n$usage" unless (defined $_query);
@@ -73,7 +83,7 @@ $query{"since_id"}=$_since_id if ($_since_id>0);
 $nrequests=0;
 while (true){
     die "[END] no requests available!\n" unless ($nrequestsremaining>0);
-    die "[END] max requests=$nrequests reached!\n" if ($nrequests>$_max_requests);
+    die "[END] max requests=$nrequests reached!\n" if ($nrequests>=$_max_requests);
     $now=&whattimeisit;
     my $r;
     eval { $r = $nt->search(\%query) };
@@ -83,7 +93,9 @@ while (true){
     }
     $nrequestsremaining--;
     $nrequests++;
+    my $curr_first_date=0;
     my $curr_first_id=0;
+    my $curr_last_date=0;
     my $curr_last_id=0;
     foreach $entry (@{$r->{statuses}}){
 	my $id = $entry->{id};
@@ -91,17 +103,25 @@ while (true){
 	    $most_recent_id=$id;
 	    print STDERR "recent_id=$most_recent_id\n";
 	}
-	$curr_first_id=$id if ($curr_first_id==0 || $id<$curr_first_id);
-	$curr_last_id=$id if ($curr_last_id==0 || $id>$curr_last_id);
+	if ($curr_first_id==0 || $id<$curr_first_id){
+	    $curr_first_id=$id;
+	    $time = localtime Time::Piece->strptime( $entry->{created_at}, "%a %b %d %T %z %Y")->epoch;
+	    $curr_first_date=$time->datetime;
+	}
+	if ($curr_last_id==0 || $id>$curr_last_id){
+	    $curr_last_id=$id;
+	    $time = localtime Time::Piece->strptime( $entry->{created_at}, "%a %b %d %T %z %Y")->epoch;
+	    $curr_last_date=$time->datetime;
+	}
 	print Dumper($entry);
     }
-####
     $dumped=Dumper(\%query); $dumped=~s/[\n\s]+/ /g; print STDERR "($now) $dumped\n";
     my $nstatuses=scalar(@{$r->{statuses}});
-    print STDERR "[OK] $nstatuses since_id=".($query{"since_id"})." max_id=".($query{"max_id"})." => [$curr_first_id,$curr_last_id] remain=$nrequestsremaining\n";
     die "[KO] error: 0 statuses fetched!\n" unless ($nstatuses);
     die "[END] since_id REACHED ($_since_id)\n" if ($_since_id && $curr_first_id<=$_since_id);
-    $query{"max_id"}=$curr_first_id-1 if ($curr_first_id);
+    ### OK
+    print STDERR "[OK] $nstatuses [$curr_first_id,$curr_last_id] [$curr_first_date,$curr_last_date] remain=$nrequestsremaining\n";
+    if ($curr_first_id) {$query{"max_id"}=$curr_first_id-1;}
 }
 exit;
 
