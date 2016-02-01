@@ -7,64 +7,79 @@ use utf8;
 binmode STDOUT,':utf8';
 binmode STDERR,':utf8';
 
-$usage="$0 [-i] [-t] [-u] [-l] [-g] [-r] [-R] [-f] [-e] [-all]
-   -i : id ({id})
-   -t : time/date ({created_at})
-   -u : user ({user}{id},{user}{screen_name})
-   -l : language ({lang})
-   -g : geolocation ({place}{full_name})
-   -x : retweet of ({retweeted_status}{id})
-   -r : num of retweets ({retweet_count})
-   -f : num of favorites ({favorite_count})
-   -e : entities (hashtags,mentions,urls,symbols)
-   -all : all options
+our $SEP="\t";
+our $RET="✪"; # &#10030; &#x272e;
+our $TAB="❂"; # &#10050; &#x2742;
+our $noRT=0;
+our $noTAG=0;
+$usage="$0 [-m] [-i] [-t] [-u] [-l] [-g] [-r] [-R] [-f] [-e] [-sep STRING] [-noRT]
+   -m          : message ({text})
+   -i          : id ({id})
+   -t          : time/date ({created_at})
+   -u          : user ({user}{id},{user}{screen_name})
+   -l          : language ({lang})
+   -g          : geolocation ({place}{full_name})
+   -x          : retweet of ({retweeted_status}{id})
+   -r          : num of retweets ({retweet_count})
+   -f          : num of favorites ({favorite_count})
+   -e          : entities (hashtags,mentions,urls,symbols)
+   -sep STRING : string used to separate columns (example: \$'\\n'\$'\\t' default: \$'\\t') 
+   -noRT       : do not consider retweets
+   -noTAG      : do not use column tags
 ";
+
 
 while ($#ARGV>=0){
     $tok = shift @ARGV;
     if ($tok eq "-h") {print $usage;exit;}
-    if ($tok eq "-i") {$do_i=1;next;}
-    if ($tok eq "-t") {$do_t=1;next;}
-    if ($tok eq "-u") {$do_u=1;next;}
-    if ($tok eq "-l") {$do_l=1;next;}
-    if ($tok eq "-g") {$do_g=1;next;}
-    if ($tok eq "-x") {$do_x=1;next;}
-    if ($tok eq "-r") {$do_r=1;next;}
-    if ($tok eq "-f") {$do_f=1;next;}
-    if ($tok eq "-e") {$do_e=1;next;}
-    if ($tok eq "-all") {$do_i=1;$do_t=1;$do_u=1;$do_l=1;$do_g=1;$do_x=1;$do_r=1;$do_f=1;$do_e=1;next;}
+    if ($tok eq "-m") {$do_m=1;push @DO,"m";next;}
+    if ($tok eq "-i") {$do_i=1;push @DO,"i";next;}
+    if ($tok eq "-t") {$do_t=1;push @DO,"t";next;}
+    if ($tok eq "-u") {$do_u=1;push @DO,"u";next;}
+    if ($tok eq "-l") {$do_l=1;push @DO,"l";next;}
+    if ($tok eq "-g") {$do_g=1;push @DO,"g";next;}
+    if ($tok eq "-x") {$do_x=1;push @DO,"x";next;}
+    if ($tok eq "-r") {$do_r=1;push @DO,"r";next;}
+    if ($tok eq "-f") {$do_f=1;push @DO,"f";next;}
+    if ($tok eq "-e") {$do_e=1;push @DO,"e";next;}
+    if ($tok eq "-sep" && $#ARGV>=0) {$SEP=shift @ARGV;next;}
+    if ($tok eq "-noRT") {$noRT=1;next;}
+    if ($tok eq "-noTAG"){$noTAG=1;next;}
     die "error: unparsed $tok option\n$usage";
 }
 
-our $SEP="\t";
-our $RET="✪"; # &#10030; &#x272e;
-our $TAB="❂"; # &#10050; &#x2742;
 our $t;
-
 %tweet_ids=();
 while (1){
     $t1 = eval &readblock;
     $t = \%{ $t1 };
+    next if ($noRT && $t->{retweeted_status});
     &parse;
     #if ($t->{retweeted_status}){$t = $t->{retweeted_status};&parse;}
 }
 exit;
 
 sub parse{
-    next if ($tweet_ids{$t->{id}});
-    $tweet_ids{$t->{id}}=1;
-    my @messg = split /${SEP}/,&messgEntities($do_e);
+#    next if ($tweet_ids{$t->{id}});
+#    $tweet_ids{$t->{id}}=1;
+    my ($messg,$ents) = split /\t/,&messgEntities($do_e);
+    
     my @line;
-    push @line,shift @messg;
-    if ($do_i){push @line,"i:".$t->{id};}
-    if ($do_t){push @line,"t:".&time;}
-    if ($do_u){push @line,"u:".$t->{user}{id}.":".$t->{user}{screen_name};}
-    if ($do_l){push @line,"l:".$t->{lang};}
-    if ($do_g){push @line,"g:".($t->{place}{id} ? $t->{place}{id}.":".$t->{place}{full_name} : "");}
-    if ($do_x){push @line,"x:".$t->{retweeted_status}{id};}
-    if ($do_r){push @line,"r:".$t->{retweet_count};}
-    if ($do_f){push @line,"f:".$t->{favorite_count};}
-    if (scalar @messg){push @line,@messg;}
+    foreach $todo (@DO){
+	if    ($todo eq "m") {push @line,($noTAG?"":"m:").$messg;}
+	elsif ($todo eq "i") {push @line,($noTAG?"":"i:").$t->{id};}
+	elsif ($todo eq "t") {
+	    my $tp = localtime Time::Piece->strptime($t->{created_at}, "%a %b %d %T %z %Y")->epoch;
+	    push @line,($noTAG?"":"t:").$tp->datetime;
+	}
+	elsif ($todo eq "u"){push @line,($noTAG?"":"u:").$t->{user}{id}.":".$t->{user}{screen_name};}
+	elsif ($todo eq "l"){push @line,($noTAG?"":"l:").$t->{lang};}
+	elsif ($todo eq "g"){push @line,($noTAG?"":"g:").($t->{place}{id}        ? $t->{place}{id}.":".$t->{place}{full_name} : "-");}
+	elsif ($todo eq "x"){push @line,($noTAG?"":"x:").($t->{retweeted_status} ? $t->{retweeted_status}{id}                 : "-");}
+	elsif ($todo eq "r"){push @line,($noTAG?"":"r:").$t->{retweet_count};}
+	elsif ($todo eq "f"){push @line,($noTAG?"":"f:").$t->{favorite_count};}
+	elsif ($todo eq "e"){push @line,($noTAG?"":"e:").$ents;}
+    }
     print decode_entities(join($SEP,@line)."\n");
 }
 sub readblock{
@@ -75,6 +90,7 @@ sub readblock{
     }
     exit; ### end of file
 }
+
 sub messgEntities{
     my $do_e=shift;
     my $str = $t->{text};
@@ -109,13 +125,9 @@ sub messgEntities{
 	    else {print STDERR "warning: unparsed entity '$entity' (tweet_id=$t->{id})\n";}
 	}
     }
-    unshift(@entities,$str);
-    return join($SEP,@entities);
+    return "$str\t@entities";
 }
-sub time{
-    my $tp = localtime Time::Piece->strptime($t->{created_at}, "%a %b %d %T %z %Y")->epoch;
-    return $tp->datetime;
-}
+
 sub hashtags{
     my @res=();
     foreach my $str (@{$t->{entities}{hashtags}}) {push @res, "#".$str->{text}."[".join(",",@{$str->{indices}}).")";}

@@ -8,8 +8,6 @@ use Time::localtime;
 use Time::Piece;
 use utf8;
 use Encode;
-#use Encode qw(decode encode);
-#use IO::Handle;
 
 binmode STDIN, ':utf8';
 binmode STDOUT,':utf8';
