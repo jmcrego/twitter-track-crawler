@@ -15,7 +15,8 @@ our $noTAG=0;
 our $noU=0;
 our $noM=0;
 our $noH=0;
-$usage="$0 [-m] [-i] [-t] [-u] [-l] [-g] [-r] [-R] [-f] [-e] [-sep STRING] [-noRT] [-noM] [-noU] [-noH]
+our %Block;
+$usage="$0 [-m] [-i] [-t] [-u] [-l] [-g] [-r] [-R] [-f] [-e] [-sep STRING] [-noRT] [-noM] [-noU] [-noH] [-block FILE]
    -m          : message ({text})
    -i          : id ({id})
    -t          : time/date ({created_at})
@@ -31,6 +32,7 @@ $usage="$0 [-m] [-i] [-t] [-u] [-l] [-g] [-r] [-R] [-f] [-e] [-sep STRING] [-noR
    -noM        : do not consider tweets with mentions
    -noU        : do not consider tweets with urls
    -noH        : do not consider tweets with hashtags
+   -block      : file with list of blocked users
    -noTAG      : do not use column tags
 ";
 
@@ -54,6 +56,13 @@ while ($#ARGV>=0){
     if ($tok eq "-noU")  {$noU=1;next;}
     if ($tok eq "-noH")  {$noH=1;next;}
     if ($tok eq "-noTAG"){$noTAG=1;next;}
+    if ($tok eq "-block" && $#ARGV>=0) {
+	$fblock=shift @ARGV;
+	open (FILE,"<$fblock") or die "error: cannot open block file=$fblock\n";
+	while (<FILE>) {chomp;$Block{$_}=1;}
+	close FILE;
+	next;
+    }
     die "error: unparsed $tok option\n$usage";
 }
 
@@ -67,6 +76,7 @@ while (1){
     next if ($noU && scalar @{$t->{entities}{urls}});
     next if ($noU && scalar @{$t->{entities}{media}});
     next if ($noH && scalar @{$t->{entities}{hashtags}});
+    next if (exists $Block{$t->{user}{id}} || exists $Block{$t->{user}{screen_name}});
     &parse;
     #if ($t->{retweeted_status}){$t = $t->{retweeted_status};&parse;}
 }
