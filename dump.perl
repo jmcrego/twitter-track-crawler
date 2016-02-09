@@ -32,7 +32,7 @@ $usage="$0 [-m] [-i] [-t] [-u] [-l] [-g] [-r] [-R] [-f] [-e] [-sep STRING] [-noR
    -noM        : do not consider tweets with mentions
    -noU        : do not consider tweets with urls
    -noH        : do not consider tweets with hashtags
-   -block      : file with list of blocked users
+   -block FILE : file with list of blocked users
    -noTAG      : do not use column tags
 ";
 
