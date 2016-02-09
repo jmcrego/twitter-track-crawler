@@ -12,7 +12,10 @@ our $RET="✪"; # &#10030; &#x272e;
 our $TAB="❂"; # &#10050; &#x2742;
 our $noRT=0;
 our $noTAG=0;
-$usage="$0 [-m] [-i] [-t] [-u] [-l] [-g] [-r] [-R] [-f] [-e] [-sep STRING] [-noRT]
+our $noU=0;
+our $noM=0;
+our $noH=0;
+$usage="$0 [-m] [-i] [-t] [-u] [-l] [-g] [-r] [-R] [-f] [-e] [-sep STRING] [-noRT] [-noM] [-noU] [-noH]
    -m          : message ({text})
    -i          : id ({id})
    -t          : time/date ({created_at})
@@ -25,6 +28,9 @@ $usage="$0 [-m] [-i] [-t] [-u] [-l] [-g] [-r] [-R] [-f] [-e] [-sep STRING] [-noR
    -e          : entities (hashtags,mentions,urls,symbols)
    -sep STRING : string used to separate columns (example: \$'\\n'\$'\\t' default: \$'\\t') 
    -noRT       : do not consider retweets
+   -noM        : do not consider tweets with mentions
+   -noU        : do not consider tweets with urls
+   -noH        : do not consider tweets with hashtags
    -noTAG      : do not use column tags
 ";
 
@@ -44,6 +50,9 @@ while ($#ARGV>=0){
     if ($tok eq "-e") {$do_e=1;push @DO,"e";next;}
     if ($tok eq "-sep" && $#ARGV>=0) {$SEP=shift @ARGV;next;}
     if ($tok eq "-noRT") {$noRT=1;next;}
+    if ($tok eq "-noM")  {$noM=1;next;}
+    if ($tok eq "-noU")  {$noU=1;next;}
+    if ($tok eq "-noH")  {$noH=1;next;}
     if ($tok eq "-noTAG"){$noTAG=1;next;}
     die "error: unparsed $tok option\n$usage";
 }
@@ -54,6 +63,10 @@ while (1){
     $t1 = eval &readblock;
     $t = \%{ $t1 };
     next if ($noRT && $t->{retweeted_status});
+    next if ($noM && scalar @{$t->{entities}{user_mentions}});
+    next if ($noU && scalar @{$t->{entities}{urls}});
+    next if ($noU && scalar @{$t->{entities}{media}});
+    next if ($noH && scalar @{$t->{entities}{hashtags}});
     &parse;
     #if ($t->{retweeted_status}){$t = $t->{retweeted_status};&parse;}
 }
