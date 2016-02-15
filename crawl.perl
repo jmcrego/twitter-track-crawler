@@ -99,6 +99,7 @@ elsif (defined $_query){
 elsif (defined $_fquery){
     die "error: missing -l option\n$usage" unless (defined $_lang);
     open (FILE,"<$_fquery") or die "error: cannot open fquery file=$_fquery\n";
+    binmode FILE, ':utf8';
     while (<FILE>){
 	chomp;
 	next if (/^\s*$/);
