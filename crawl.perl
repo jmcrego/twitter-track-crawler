@@ -101,7 +101,7 @@ elsif (defined $_fquery){
     open (FILE,"<$_fquery") or die "error: cannot open fquery file=$_fquery\n";
     while (<FILE>){
 	chomp;
-	next if (/^\s*$);
+	next if (/^\s*$/);
 	next if (/^ /);
 	push @QUERY, $_;
     }
