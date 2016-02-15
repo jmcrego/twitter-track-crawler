@@ -142,7 +142,7 @@ while (true){
     my $curr_last_date=0;
     my $curr_last_id=0;
     foreach $entry (@{$r->{statuses}}){
-	my $id = $entry->{id};
+	my $id = $entry->{id_str};
 	if ($id>$most_recent_id){
 	    $most_recent_id=$id;
 	    print STDERR "recent_id=$most_recent_id\n";
