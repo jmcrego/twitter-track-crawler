@@ -47,6 +47,7 @@ $usage="$0 -k FILE (query OR geolocation OR trends)
            -t WOEID                             (trends)
    -k FILE   : key file
    -q STRING : list of terms in query mode (Ex: \"earthquake OR extreme heat\")
+   -Q STRING : file with list of terms in query mode (one line each term)
    -g        : geolocation mode
    -t WOEID  : WOEID in trends mode
    -l LANG   : language (default: not used)
@@ -60,6 +61,7 @@ while ($#ARGV>=0){
     if ($tok eq "-g") {$_geolocation=1; next;} 
     if ($tok eq "-t" && $#ARGV>=0) {$_trends=shift @ARGV; next;} 
     if ($tok eq "-q" && $#ARGV>=0) {$_query=shift @ARGV; next;} 
+    if ($tok eq "-Q" && $#ARGV>=0) {$_fquery=shift @ARGV; next;} 
     if ($tok eq "-l" && $#ARGV>=0) {$_lang=shift @ARGV; next;} 
     if ($tok eq "-k" && $#ARGV>=0) {$_fkey=shift @ARGV; next;} 
     if ($tok eq "-s" && $#ARGV>=0) {$_since_id=shift @ARGV; next;} 
@@ -93,6 +95,16 @@ elsif (defined $_geolocation){
 }
 elsif (defined $_query){
     die "error: missing -l option\n$usage" unless (defined $_lang);
+}
+elsif (defined $_fquery){
+    die "error: missing -l option\n$usage" unless (defined $_lang);
+    open (FILE,"<$_fquery") or die "error: cannot open fquery file=$_fquery\n";
+    while (<FILE>){
+	chomp;
+	push @QUERY, $_;
+    }
+    close FILE;
+    $_query=join(" OR ",@QUERY);
 }
 else{
    die "error: missing -q OR -g OR -t options\n$usage";
