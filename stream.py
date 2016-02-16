@@ -1,4 +1,3 @@
-#!/usr/bin/python
 # -*- coding: utf-8 -*-
 from TwitterAPI import TwitterAPI
 import sys
@@ -8,7 +7,7 @@ import argparse
 parser = argparse.ArgumentParser(description='Twitter streamer.')
 parser.add_argument('-v', help='verbose output', action='count')
 parser.add_argument('-l', help='language', action="store", required=True)
-parser.add_argument('-k', help='file with Twitter application keys (one key per line)', action="store", required=True)
+parser.add_argument('-k', help='file with Twitter keys (one key per line)', action="store", required=True)
 parser.add_argument('-t', help='file with term keywords (one term per line)', action="store", required=True)
 args = parser.parse_args()
 
