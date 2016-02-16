@@ -11,8 +11,8 @@ for line in sys.stdin :
         item['text'].replace('\n', unicode('✪','utf-8')).replace('\t', unicode('❂','utf-8'))
         try:
             print(item['id_str']+"\t"+item['created_at']+"\t"+item['text'])
-        except UnicodeEncodeError:
-            print >> sys.stderr, "bad string at nline="+str(nline)
+        except Exception, e :
+		print >> sys.stderr, "error "+str(e)+": line="+str(nline)
             
 
 
