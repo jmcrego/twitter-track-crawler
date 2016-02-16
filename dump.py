@@ -23,7 +23,7 @@ for line in sys.stdin :
     item['text'] = item['text'].replace('\r', unicode('✪','utf-8'))
     item['text'] = item['text'].replace('\t', unicode('❂','utf-8'))
     try : 
-        print(item['id_str']+"\t"+item['created_at']+"\t"+item['user']['screen_name']+"\t"+item['text'])
+        print((item['id_str']+"\t"+item['created_at']+"\t"+item['user']['screen_name']+"\t"+item['text']).encode('utf-8'))
         nok += 1
     except Exception, e : 
         if args.v : print >> sys.stderr, "error "+str(e)+": line="+str(n)
