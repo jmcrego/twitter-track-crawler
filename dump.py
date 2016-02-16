@@ -4,7 +4,7 @@ import json
 import argparse
 
 parser = argparse.ArgumentParser(description='Twitter streamer.')
-parser.add_argument("-v", "--verbose", help='verbose output', action="count", default=0)
+parser.add_argument("-v", help='verbose output', action="count", default=0)
 args = parser.parse_args()
 
 n=0
