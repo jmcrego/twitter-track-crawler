@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 from TwitterAPI import TwitterAPI
 import sys
+import codecs
 import json
 import argparse
 from time import gmtime, strftime
@@ -16,7 +17,7 @@ args = parser.parse_args()
 KEYS = [line.rstrip('\n') for line in open(args.k)]
 if len(KEYS)!=4 : sys.exit('error: keys file should contain 4 entries')
 if args.v : print >> sys.stderr, "KEYS: \t"+"\n\t".join(KEYS)
-TERMS = [line.rstrip('\n') for line in open(args.t)]
+TERMS = [line.rstrip('\n') for line in codecs.open(args.t, "r", "utf-8")]
 if len(TERMS)==0 or len(TERMS)>400 : sys.exit('error: terms file should contain [1,400) entries')
 if args.v : print >> sys.stderr, "TERMS:\t"+"\n\t".join(TERMS)
 LANG = args.l
@@ -24,12 +25,14 @@ if args.v : print >> sys.stderr, "LANG: \t"+LANG
 
 if args.o :
     mydate=strftime("%Y-%m-%d_%Hh", gmtime())
-    f = open(args.o + "." + mydate , 'a')
+    f = codecs.open(args.o + "." + mydate , 'a', "utf-8")
     mydateprev=mydate
 
 api = TwitterAPI(KEYS[0],KEYS[1],KEYS[2],KEYS[3])
-r = api.request('statuses/filter', {'track': ",".join(TERMS), 'language': LANG})
-for tweet in r :
+r = api.request('statuses/filter', {'track': ",".join(TERMS)})
+if args.l : r = api.request('statuses/filter', {'track': ",".join(TERMS), 'language': LANG})
+
+for tweet in r.get_iterator() :
     mydate=strftime("%Y-%m-%d_%Hh", gmtime())
     if args.o :
         if (mydate != mydateprev) :
@@ -38,6 +41,7 @@ for tweet in r :
             mydateprev = mydate
         f.write ( json.dumps( tweet, ensure_ascii='True', sort_keys=True, separators=(',',': ') ) + "\n" )
     else :
-        print json.dumps( tweet, ensure_ascii='True', sort_keys=True, separators=(',',': ') )
+        #print json.dumps( tweet, ensure_ascii='True', sort_keys=True, separators=(',',': ') )
+        print( json.dumps( tweet, ensure_ascii='True', sort_keys=True, separators=(',',': ')) )
 
     
